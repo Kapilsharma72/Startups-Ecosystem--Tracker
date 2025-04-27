@@ -1,8 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Dashboard from '../components/Dashboard.vue'
-import StartupList from '../components/StartupList.vue'
-import InvestorList from '../components/InvestorList.vue'
-import NewsFeed from '../components/NewsFeed.vue'
+import Dashboard from '../pages/Dashboard.vue';
+import StartupList from '../pages/StartupList.vue';
+import InvestorList from '../pages/InvestorList.vue';
+import NewsFeed from '../pages/NewsFeed.vue';
 
 const routes = [
     {
@@ -32,4 +32,4 @@ const router = createRouter({
     routes
 })
 
-export default router 
+export default router
