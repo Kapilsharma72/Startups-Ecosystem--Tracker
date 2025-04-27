@@ -296,6 +296,136 @@
             <p class="mt-4 text-xl text-gray-400">No startups found matching your criteria</p>
             <button @click="clearFilters" class="mt-4 btn-secondary">Clear filters</button>
         </div>
+
+        <!-- Edit Startup Modal -->
+        <div v-if="showEditModal" class="fixed inset-0 overflow-y-auto z-50">
+            <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                    <div class="absolute inset-0 bg-gray-900 opacity-75"></div>
+                </div>
+                
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                
+                <div class="inline-block align-bottom bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full max-h-[90vh] overflow-y-auto">
+                    <div class="bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-primary-600 sm:mx-0 sm:h-10 sm:w-10">
+                                <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                </svg>
+                            </div>
+                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                                <h3 class="text-lg leading-6 font-medium text-white">
+                                    Edit Startup
+                                </h3>
+                                <div class="mt-4">
+                                    <form @submit.prevent="updateStartup" class="space-y-4">
+                                        <!-- Basic Information -->
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label for="edit-name" class="block text-sm font-medium text-gray-300">Name*</label>
+                                                <input type="text" id="edit-name" v-model="editForm.name" class="mt-1 input-field w-full" required />
+                                            </div>
+                                            <div>
+                                                <label for="edit-website" class="block text-sm font-medium text-gray-300">Website</label>
+                                                <input type="url" id="edit-website" v-model="editForm.website" class="mt-1 input-field w-full" placeholder="https://..." />
+                                            </div>
+                                        </div>
+
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label for="edit-location" class="block text-sm font-medium text-gray-300">Location*</label>
+                                                <input type="text" id="edit-location" v-model="editForm.location" class="mt-1 input-field w-full" required />
+                                            </div>
+                                            <div>
+                                                <label for="edit-logo" class="block text-sm font-medium text-gray-300">Logo URL</label>
+                                                <input type="url" id="edit-logo" v-model="editForm.logo" class="mt-1 input-field w-full" placeholder="https://..." />
+                                            </div>
+                                        </div>
+
+                                        <!-- Industry & Stage -->
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label for="edit-industry" class="block text-sm font-medium text-gray-300">Industry*</label>
+                                                <select id="edit-industry" v-model="editForm.industry" class="mt-1 input-field w-full" required>
+                                                    <option v-for="industry in uniqueIndustries" :key="industry" :value="industry">{{ industry }}</option>
+                                                    <option value="Other">Other</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label for="edit-stage" class="block text-sm font-medium text-gray-300">Stage*</label>
+                                                <select id="edit-stage" v-model="editForm.stage" class="mt-1 input-field w-full" required>
+                                                    <option v-for="stage in uniqueStages" :key="stage" :value="stage">{{ stage }}</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <!-- Funding Information -->
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label for="edit-funding" class="block text-sm font-medium text-gray-300">Funding Amount (in millions)*</label>
+                                                <input type="number" id="edit-funding" v-model="editForm.funding" step="0.01" min="0" class="mt-1 input-field w-full" required />
+                                            </div>
+                                            <div>
+                                                <label for="edit-funding-round" class="block text-sm font-medium text-gray-300">Funding Round*</label>
+                                                <select id="edit-funding-round" v-model="editForm.fundingRound" class="mt-1 input-field w-full" required>
+                                                    <option value="Seed">Seed</option>
+                                                    <option value="Angel">Angel</option>
+                                                    <option value="Series A">Series A</option>
+                                                    <option value="Series B">Series B</option>
+                                                    <option value="Series C">Series C</option>
+                                                    <option value="IPO">IPO</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <!-- Description -->
+                                        <div>
+                                            <label for="edit-description" class="block text-sm font-medium text-gray-300">Description</label>
+                                            <textarea id="edit-description" v-model="editForm.description" rows="3" class="mt-1 input-field w-full"></textarea>
+                                        </div>
+
+                                        <!-- Technologies -->
+                                        <div>
+                                            <label for="edit-technologies" class="block text-sm font-medium text-gray-300">Technologies</label>
+                                            <input 
+                                                type="text" 
+                                                id="edit-technologies"
+                                                v-model="editForm.technologies" 
+                                                placeholder="Comma separated" 
+                                                class="mt-1 input-field w-full"
+                                            />
+                                        </div>
+
+                                        <!-- Employee Numbers -->
+                                        <div>
+                                            <label for="edit-emp-numbers" class="block text-sm font-medium text-gray-300">Employee Numbers</label>
+                                            <input type="number" id="edit-emp-numbers" v-model="editForm.emp_numbers" class="mt-1 input-field w-full" />
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button 
+                            @click="updateStartup" 
+                            type="button" 
+                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-base font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:ml-3 sm:w-auto sm:text-sm"
+                        >
+                            Update Startup
+                        </button>
+                        <button 
+                            @click="showEditModal = false" 
+                            type="button" 
+                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-600 shadow-sm px-4 py-2 bg-gray-800 text-base font-medium text-gray-300 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -319,6 +449,21 @@ export default {
         });
         const sortBy = ref('name');
         const sortDesc = ref(false);
+        const showEditModal = ref(false);
+        const editForm = ref({
+            id: null,
+            name: '',
+            website: '',
+            location: '',
+            logo: '',
+            industry: '',
+            stage: '',
+            funding: null,
+            fundingRound: '',
+            description: '',
+            technologies: '',
+            emp_numbers: null
+        });
 
         // Fetch startups list data from API
         const fetchStartups = async () => {
@@ -456,17 +601,93 @@ export default {
         
         // Edit startup
         const editStartup = (startup) => {
-            // Implement edit startup logic
-            console.log('Edit startup:', startup);
-            
-            // In a real application, you might navigate to an edit page or open a modal
-            // router.push(`/startups/edit/${startup.id}`);
+            showEditModal.value = true;
+            // Clone the startup object to avoid direct mutation
+            editForm.value = {
+                id: startup.id,
+                name: startup.name,
+                website: startup.website || '',
+                location: startup.location,
+                logo: startup.logo || '',
+                industry: startup.industry,
+                stage: startup.stage,
+                funding: startup.funding,
+                fundingRound: startup.fundingRound,
+                description: startup.description || '',
+                technologies: startup.technologies || '',
+                emp_numbers: startup.employees || null
+            };
         };
         
+        // Update startup
+        const updateStartup = async () => {
+            try {
+                // Show loading state
+                isLoading.value = true;
+                
+                // Prepare the data for API
+                const formData = {
+                    name: editForm.value.name,
+                    logo: editForm.value.logo,
+                    location: editForm.value.location,
+                    industry: editForm.value.industry,
+                    stage: editForm.value.stage,
+                    funding: parseFloat(editForm.value.funding),
+                    funding_round: editForm.value.fundingRound,
+                    description: editForm.value.description,
+                    website: editForm.value.website,
+                    emp_numbers: editForm.value.emp_numbers ? parseInt(editForm.value.emp_numbers) : null,
+                    // Ensure technologies is sent as a string
+                    technologies: Array.isArray(editForm.value.technologies) 
+                        ? editForm.value.technologies.join(', ') 
+                        : (editForm.value.technologies || '')
+                };
+                
+                // Include CSRF token in headers
+                const headers = {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                };
+                
+                // Get the base URL of the application
+                const baseUrl = window.location.origin;
+                
+                // Make the API request to update the startup
+                const response = await axios.put(`${baseUrl}/api/startups/${editForm.value.id}`, formData, {
+                    headers,
+                    withCredentials: true
+                });
+                
+                // Close the modal and show success message
+                showEditModal.value = false;
+                alert(response.data.message || 'Startup updated successfully');
+                
+                // Refresh the startups list
+                await fetchStartups();
+                
+            } catch (error) {
+                console.error('Error updating startup:', error);
+                let errorMessage = 'Failed to update startup';
+                
+                if (error.response && error.response.data && error.response.data.errors) {
+                    const errors = error.response.data.errors;
+                    errorMessage = Object.values(errors).flat().join(', ');
+                } else if (error.response && error.response.data && error.response.data.message) {
+                    errorMessage = error.response.data.message;
+                }
+                
+                alert('Error: ' + errorMessage);
+            } finally {
+                // End loading state
+                isLoading.value = false;
+            }
+        };
+
         // Add new startup
         const addStartup = () => {
-            // Navigate to add startup page or open a modal
-            console.log('Add new startup');
+            // Navigate to dashboard to use the existing add startup modal
+            window.location.href = '/dashboard';
         };
 
         return {
@@ -491,7 +712,10 @@ export default {
             clearFilters,
             viewStartup,
             editStartup,
-            addStartup
+            addStartup,
+            showEditModal,
+            editForm,
+            updateStartup
         };
     }
 };
