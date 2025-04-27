@@ -352,181 +352,221 @@ export default {
         const fundingChart = ref(null);
         const industryChart = ref(null);
         const showStartupModal = ref(false);
-        const techInput = ref('');
-
-        // Sample data
+        
+        // Initialize data with loading state
         const stats = ref({
-            totalStartups: 248,
-            startupGrowth: 12,
-            totalFunding: 1250000000,
-            fundingGrowth: 8,
-            activeInvestors: 56,
-            investorGrowth: 5,
-            successRate: 78,
-            successGrowth: 3
+            totalStartups: '...',
+            startupGrowth: '...',
+            totalFunding: '...',
+            fundingGrowth: '...',
+            activeInvestors: '...',
+            investorGrowth: '...',
+            successRate: '...',
+            successGrowth: '...'
         });
 
-        const recentActivity = ref([
-            {
-                type: 'funding',
-                description: 'TechStart Inc. raised $10M in Series A funding',
-                date: '2024-03-15T10:00:00Z'
-            },
-            {
-                type: 'launch',
-                description: 'HealthTech Solutions launched their new AI platform',
-                date: '2024-03-14T15:30:00Z'
-            },
-            {
-                type: 'partnership',
-                description: 'FinTech Innovations partnered with Global Bank',
-                date: '2024-03-13T09:15:00Z'
-            },
-            {
-                type: 'funding',
-                description: 'EcoGreen raised $5M in seed funding',
-                date: '2024-03-12T14:45:00Z'
-            },
-            {
-                type: 'other',
-                description: 'AI Solutions expanded to European market',
-                date: '2024-03-11T11:20:00Z'
-            }
-        ]);
+        const recentActivity = ref([]);
+        const topStartups = ref([]);
+        const fundingTrendsData = ref([]);
+        const industryData = ref({
+            labels: [],
+            data: []
+        });
+        
+        // Charts instances
+        let fundingChartInstance = null;
+        let industryChartInstance = null;
 
-        const topStartups = ref([
-            {
-                id: 1,
-                name: 'TechStart Inc.',
-                logo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-                location: 'San Francisco, CA',
-                industry: 'AI',
-                funding: 25000000,
-                growth: 25
-            },
-            {
-                id: 2,
-                name: 'HealthTech Solutions',
-                logo: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-                location: 'Boston, MA',
-                industry: 'Healthcare',
-                funding: 18000000,
-                growth: 18
-            },
-            {
-                id: 3,
-                name: 'FinTech Innovations',
-                logo: 'https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-                location: 'New York, NY',
-                industry: 'FinTech',
-                funding: 15000000,
-                growth: 15
-            },
-            {
-                id: 4,
-                name: 'EcoGreen',
-                logo: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-                location: 'Austin, TX',
-                industry: 'CleanTech',
-                funding: 12000000,
-                growth: 12
-            },
-            {
-                id: 5,
-                name: 'AI Solutions',
-                logo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-                location: 'Seattle, WA',
-                industry: 'AI',
-                funding: 10000000,
-                growth: -5
-            }
-        ]);
-
-        // Initialize charts
-        onMounted(() => {
-            // Funding Trends Chart
-            const fundingCtx = fundingChart.value.getContext('2d');
-            new Chart(fundingCtx, {
-                type: 'line',
-                data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                    datasets: [
-                        {
-                            label: 'Funding Amount ($M)',
-                            data: [65, 59, 80, 81, 56, 55, 40, 65, 59, 80, 81, 56],
-                            fill: false,
-                            borderColor: '#3B82F6',
-                            tension: 0.4
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
+        // Fetch dashboard data
+        const fetchDashboardData = async () => {
+            try {
+                const baseUrl = window.location.origin;
+                const response = await axios.get(`${baseUrl}/api/dashboard-data`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            },
-                            ticks: {
-                                color: 'rgba(255, 255, 255, 0.7)'
+                    withCredentials: true
+                });
+                
+                const data = response.data;
+                
+                // Update statistics
+                stats.value = data.stats;
+                
+                // Update funding trends chart data
+                fundingTrendsData.value = data.fundingTrends;
+                updateFundingTrendsChart();
+                
+                // Update industry distribution chart
+                const industriesData = data.industries;
+                industryData.value = {
+                    labels: industriesData.map(item => item.industry),
+                    data: industriesData.map(item => item.total)
+                };
+                updateIndustryChart();
+                
+                // Update top startups
+                topStartups.value = data.topStartups;
+                
+                // Fetch recent activity (could be added to backend)
+                // For now we'll keep the sample activity data
+                fetchRecentActivity();
+                
+            } catch (error) {
+                console.error('Error fetching dashboard data:', error);
+                alert('Failed to load dashboard data');
+            }
+        };
+        
+        const fetchRecentActivity = () => {
+            // In a real application, this would fetch from the backend
+            // For now, we'll use sample data
+            recentActivity.value = [
+                {
+                    type: 'funding',
+                    description: 'TechStart Inc. raised $10M in Series A funding',
+                    date: '2024-03-15T10:00:00Z'
+                },
+                {
+                    type: 'launch',
+                    description: 'HealthTech Solutions launched their new AI platform',
+                    date: '2024-03-14T15:30:00Z'
+                },
+                {
+                    type: 'partnership',
+                    description: 'FinTech Innovations partnered with Global Bank',
+                    date: '2024-03-13T09:15:00Z'
+                },
+                {
+                    type: 'funding',
+                    description: 'EcoGreen raised $5M in seed funding',
+                    date: '2024-03-12T14:45:00Z'
+                },
+                {
+                    type: 'other',
+                    description: 'AI Solutions expanded to European market',
+                    date: '2024-03-11T11:20:00Z'
+                }
+            ];
+        };
+        
+        // Update funding trends chart with real data
+        const updateFundingTrendsChart = () => {
+            if (fundingChartInstance) {
+                fundingChartInstance.destroy();
+            }
+            
+            if (fundingChart.value) {
+                const ctx = fundingChart.value.getContext('2d');
+                fundingChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: fundingTrendsData.value.map(item => item.month),
+                        datasets: [
+                            {
+                                label: 'Funding Amount ($M)',
+                                data: fundingTrendsData.value.map(item => item.funding),
+                                fill: false,
+                                borderColor: '#3B82F6',
+                                tension: 0.4
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
                             }
                         },
-                        x: {
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                },
+                                ticks: {
+                                    color: 'rgba(255, 255, 255, 0.7)'
+                                }
                             },
-                            ticks: {
-                                color: 'rgba(255, 255, 255, 0.7)'
+                            x: {
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                },
+                                ticks: {
+                                    color: 'rgba(255, 255, 255, 0.7)'
+                                }
                             }
                         }
                     }
-                }
-            });
+                });
+            }
+        };
+        
+        // Update industry chart with real data
+        const updateIndustryChart = () => {
+            if (industryChartInstance) {
+                industryChartInstance.destroy();
+            }
+            
+            if (industryChart.value) {
+                const ctx = industryChart.value.getContext('2d');
+                industryChartInstance = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: industryData.value.labels,
+                        datasets: [
+                            {
+                                data: industryData.value.data,
+                                backgroundColor: [
+                                    '#3B82F6',
+                                    '#10B981',
+                                    '#F59E0B',
+                                    '#EF4444',
+                                    '#8B5CF6',
+                                    '#6B7280'
+                                ]
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    color: 'rgba(255, 255, 255, 0.7)'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        };
 
-            // Industry Distribution Chart
-            const industryCtx = industryChart.value.getContext('2d');
-            new Chart(industryCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['AI', 'FinTech', 'Healthcare', 'CleanTech', 'E-commerce', 'Other'],
-                    datasets: [
-                        {
-                            data: [30, 25, 15, 10, 12, 8],
-                            backgroundColor: [
-                                '#3B82F6',
-                                '#10B981',
-                                '#F59E0B',
-                                '#EF4444',
-                                '#8B5CF6',
-                                '#6B7280'
-                            ]
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                            labels: {
-                                color: 'rgba(255, 255, 255, 0.7)'
-                            }
-                        }
-                    }
-                }
-            });
+        // Initialize and set up auto-refresh
+        onMounted(() => {
+            fetchDashboardData();
+            
+            // Refresh data every minute (60000 ms)
+            const refreshInterval = setInterval(() => {
+                fetchDashboardData();
+            }, 60000);
+            
+            // Clean up interval on component unmount
+            return () => {
+                clearInterval(refreshInterval);
+                if (fundingChartInstance) fundingChartInstance.destroy();
+                if (industryChartInstance) industryChartInstance.destroy();
+            };
         });
 
         // Helper functions
         const formatNumber = (num) => {
+            if (num === '...') return '...';
             return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
         };
 
@@ -632,6 +672,9 @@ export default {
                     technologies: ''
                 };
                 showStartupModal.value = false;
+                
+                // After successful submission, refresh the dashboard data
+                fetchDashboardData();
                 
             } catch (error) {
                 console.error('Error submitting startup:', error);

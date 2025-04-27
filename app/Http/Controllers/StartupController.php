@@ -3,9 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Startup;
+use App\Models\Investor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
+use Carbon\Carbon;
 
 class StartupController extends Controller
 {
@@ -118,5 +122,149 @@ class StartupController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Get dashboard data including stats and charts data
+     * 
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function dashboardData()
+    {
+        // Use cache with 1-minute expiration
+        $dashboardData = Cache::remember('dashboard_data', 60, function () {
+            $now = Carbon::now();
+            $lastMonth = Carbon::now()->subMonth();
+
+            // Calculate statistics
+            $currentMonthStartups = Startup::whereMonth('created_at', $now->month)
+                ->whereYear('created_at', $now->year)
+                ->count();
+            
+            $lastMonthStartups = Startup::whereMonth('created_at', $lastMonth->month)
+                ->whereYear('created_at', $lastMonth->year)
+                ->count();
+            
+            // Calculate startup growth percentage
+            $startupGrowth = $lastMonthStartups > 0 
+                ? round((($currentMonthStartups - $lastMonthStartups) / $lastMonthStartups) * 100, 1)
+                : 0;
+            
+            // Calculate total funding
+            $totalFunding = Startup::sum('funding') * 1000000; // Convert to actual amount
+            
+            // Calculate funding growth
+            $currentMonthFunding = Startup::whereMonth('created_at', $now->month)
+                ->whereYear('created_at', $now->year)
+                ->sum('funding');
+            
+            $lastMonthFunding = Startup::whereMonth('created_at', $lastMonth->month)
+                ->whereYear('created_at', $lastMonth->year)
+                ->sum('funding');
+            
+            $fundingGrowth = $lastMonthFunding > 0 
+                ? round((($currentMonthFunding - $lastMonthFunding) / $lastMonthFunding) * 100, 1)
+                : 0;
+            
+            // Calculate active investors
+            $activeInvestors = Investor::count();
+            
+            // Calculate investor growth
+            $currentMonthInvestors = Investor::whereMonth('created_at', $now->month)
+                ->whereYear('created_at', $now->year)
+                ->count();
+            
+            $lastMonthInvestors = Investor::whereMonth('created_at', $lastMonth->month)
+                ->whereYear('created_at', $lastMonth->year)
+                ->count();
+            
+            $investorGrowth = $lastMonthInvestors > 0 
+                ? round((($currentMonthInvestors - $lastMonthInvestors) / $lastMonthInvestors) * 100, 1)
+                : 0;
+            
+            // Calculate success rate (startups with funding > $5M)
+            $successfulStartups = Startup::where('funding', '>=', 5)->count(); // $5M or more
+            $totalStartups = Startup::count();
+            
+            $successRate = $totalStartups > 0 ? round(($successfulStartups / $totalStartups) * 100, 1) : 0;
+            
+            // Calculate success growth
+            // Define success in the previous month
+            $successfulLastMonth = Startup::whereMonth('created_at', $lastMonth->month)
+                ->whereYear('created_at', $lastMonth->year)
+                ->where('funding', '>=', 5)
+                ->count();
+            
+            $totalLastMonth = Startup::whereMonth('created_at', $lastMonth->month)
+                ->whereYear('created_at', $lastMonth->year)
+                ->count();
+            
+            $successRateLastMonth = $totalLastMonth > 0 ? ($successfulLastMonth / $totalLastMonth) * 100 : 0;
+            
+            $successGrowth = $successRateLastMonth > 0 
+                ? round(($successRate - $successRateLastMonth), 1)
+                : 0;
+            
+            // Get funding trends data (last 12 months)
+            $fundingTrends = [];
+            for ($i = 11; $i >= 0; $i--) {
+                $date = Carbon::now()->subMonths($i);
+                $monthFunding = Startup::whereMonth('created_at', $date->month)
+                    ->whereYear('created_at', $date->year)
+                    ->sum('funding');
+                
+                $fundingTrends[] = [
+                    'month' => $date->format('M'),
+                    'funding' => $monthFunding
+                ];
+            }
+            
+            // Get industry distribution
+            $industries = Startup::select('industry', DB::raw('count(*) as total'))
+                ->groupBy('industry')
+                ->orderByDesc('total')
+                ->limit(6) // Top 6 industries
+                ->get()
+                ->toArray();
+            
+            // Get top startups
+            $topStartups = Startup::orderByDesc('funding')
+                ->limit(5)
+                ->get()
+                ->map(function ($startup) {
+                    // Calculate growth based on previous period (placeholder - you may need to adjust this logic)
+                    // In a real system, you might have historical data to calculate actual growth
+                    $growth = rand(-10, 30); // For demonstration only - replace with actual growth calculation
+                    
+                    return [
+                        'id' => $startup->id,
+                        'name' => $startup->name,
+                        'logo' => $startup->logo ?: 'https://via.placeholder.com/150',
+                        'location' => $startup->location,
+                        'industry' => $startup->industry,
+                        'funding' => $startup->funding * 1000000, // Convert to actual amount
+                        'growth' => $growth
+                    ];
+                });
+            
+            // Assemble data
+            return [
+                'stats' => [
+                    'totalStartups' => $totalStartups,
+                    'startupGrowth' => $startupGrowth,
+                    'totalFunding' => $totalFunding,
+                    'fundingGrowth' => $fundingGrowth,
+                    'activeInvestors' => $activeInvestors,
+                    'investorGrowth' => $investorGrowth,
+                    'successRate' => $successRate,
+                    'successGrowth' => $successGrowth
+                ],
+                'fundingTrends' => $fundingTrends,
+                'industries' => $industries,
+                'topStartups' => $topStartups
+            ];
+        });
+        
+        return response()->json($dashboardData);
     }
 }
