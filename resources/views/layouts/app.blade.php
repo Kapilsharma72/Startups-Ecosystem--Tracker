@@ -89,6 +89,16 @@
                                     <img class="h-8 w-8 rounded-full" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="">
                                 </button>
                             </div>
+                            
+                            <!-- Logout Button -->
+                            @auth
+                            <form method="POST" action="{{ route('logout') }}" class="inline-block ml-3">
+                                @csrf
+                                <button type="submit" class="px-3 py-1 text-xs rounded-full bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-red-500">
+                                    Logout
+                                </button>
+                            </form>
+                            @endauth
                         </div>
                     </div>
                 </div>
@@ -99,7 +109,11 @@
         <main class="py-12">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div id="app">
-                    <router-view></router-view>
+                    @auth
+                        <router-view></router-view>
+                    @else
+                        <script>window.location.href = "{{ route('login') }}";</script>
+                    @endauth
                 </div>
             </div>
         </main>
@@ -180,5 +194,17 @@
             </div>
         </div>
     </footer>
+    
+    <!-- Pass Auth Status to JavaScript -->
+    @auth
+    <script>
+        window.isLoggedIn = true;
+        window.user = @json(auth()->user());
+    </script>
+    @else
+    <script>
+        window.isLoggedIn = false;
+    </script>
+    @endauth
 </body>
-</html> 
+</html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Startup Ecosystem Tracker</title>
+    <title>Register - Startup Ecosystem Tracker</title>
     @vite(['resources/css/tailwind.css'])
 </head>
 <body class="bg-gray-900 text-white">
@@ -16,10 +16,10 @@
                     </div>
                 </div>
                 <h2 class="mt-6 text-center text-3xl font-extrabold text-white">
-                    Sign in to your account
+                    Create your account
                 </h2>
                 <p class="mt-2 text-center text-sm text-gray-300">
-                    Access the Startup Ecosystem Tracker dashboard
+                    Join the Startup Ecosystem Tracker platform
                 </p>
             </div>
             
@@ -33,7 +33,7 @@
                     </div>
                     <div class="ml-3">
                         <h3 class="text-sm font-medium text-white">
-                            Authentication failed
+                            Registration failed
                         </h3>
                         <div class="mt-2 text-sm text-white">
                             <ul class="list-disc pl-5 space-y-1">
@@ -47,30 +47,32 @@
             </div>
             @endif
             
-            <form method="POST" action="{{ route('login') }}" class="mt-8 space-y-6">
+            <form method="POST" action="{{ route('register') }}" class="mt-8 space-y-6">
                 @csrf
                 <div class="rounded-md shadow-sm -space-y-px">
                     <div>
+                        <label for="name" class="sr-only">Full name</label>
+                        <input id="name" name="name" type="text" autocomplete="name" required 
+                            class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-700 placeholder-gray-400 text-white rounded-t-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm bg-gray-700"
+                            placeholder="Full name" value="{{ old('name') }}">
+                    </div>
+                    <div>
                         <label for="email" class="sr-only">Email address</label>
                         <input id="email" name="email" type="email" autocomplete="email" required 
-                            class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-700 placeholder-gray-400 text-white rounded-t-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm bg-gray-700"
+                            class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-700 placeholder-gray-400 text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm bg-gray-700"
                             placeholder="Email address" value="{{ old('email') }}">
                     </div>
                     <div>
                         <label for="password" class="sr-only">Password</label>
-                        <input id="password" name="password" type="password" autocomplete="current-password" required 
-                            class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-700 placeholder-gray-400 text-white rounded-b-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm bg-gray-700"
+                        <input id="password" name="password" type="password" autocomplete="new-password" required 
+                            class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-700 placeholder-gray-400 text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm bg-gray-700"
                             placeholder="Password">
                     </div>
-                </div>
-
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center">
-                        <input id="remember_me" name="remember" type="checkbox" 
-                            class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-600 rounded bg-gray-700">
-                        <label for="remember_me" class="ml-2 block text-sm text-gray-300">
-                            Remember me
-                        </label>
+                    <div>
+                        <label for="password_confirmation" class="sr-only">Confirm Password</label>
+                        <input id="password_confirmation" name="password_confirmation" type="password" autocomplete="new-password" required 
+                            class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-700 placeholder-gray-400 text-white rounded-b-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm bg-gray-700"
+                            placeholder="Confirm password">
                     </div>
                 </div>
 
@@ -78,19 +80,19 @@
                     <button type="submit" 
                         class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
                         <span class="absolute left-0 inset-y-0 flex items-center pl-3">
-                            <svg class="h-5 w-5 text-primary-400 group-hover:text-primary-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                            <svg class="h-5 w-5 text-primary-400 group-hover:text-primary-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
                             </svg>
                         </span>
-                        Sign in
+                        Register
                     </button>
                 </div>
                 
                 <div class="text-center mt-4">
                     <p class="text-sm text-gray-400">
-                        Don't have an account?
-                        <a href="{{ route('register') }}" class="font-medium text-primary-500 hover:text-primary-400">
-                            Register now
+                        Already have an account?
+                        <a href="{{ route('login') }}" class="font-medium text-primary-500 hover:text-primary-400">
+                            Sign in
                         </a>
                     </p>
                 </div>
