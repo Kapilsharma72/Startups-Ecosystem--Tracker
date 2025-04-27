@@ -27,6 +27,7 @@ Route::get('/startups/{startup}', [StartupController::class, 'show']);
 Route::post('/startups', [StartupController::class, 'store']);
 Route::put('/startups/{startup}', [StartupController::class, 'update']);
 Route::delete('/startups/{startup}', [StartupController::class, 'destroy']);
+Route::get('/startup-list-data', [StartupController::class, 'listData']);
 
 // Dashboard data
 Route::get('/dashboard-data', [StartupController::class, 'dashboardData']);

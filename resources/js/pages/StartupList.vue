@@ -28,8 +28,19 @@
             </div>
         </div>
 
+        <!-- Loading State -->
+        <div v-if="isLoading" class="card flex items-center justify-center p-12">
+            <div class="text-center">
+                <svg class="animate-spin h-10 w-10 text-blue-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p class="mt-4 text-lg text-gray-400">Loading startups...</p>
+            </div>
+        </div>
+
         <!-- Map View (if enabled) -->
-        <div v-if="showMap" class="card h-96 mb-6">
+        <div v-else-if="showMap" class="card h-96 mb-6">
             <div class="h-full w-full bg-gray-800 rounded-lg flex items-center justify-center">
                 <div class="text-center">
                     <svg class="h-16 w-16 mx-auto text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -41,7 +52,7 @@
         </div>
 
         <!-- Filters -->
-        <div class="card">
+        <div v-if="!isLoading" class="card">
             <div class="flex flex-col space-y-4 sm:flex-row sm:space-x-4 sm:space-y-0">
                 <div class="flex-1">
                     <label for="search" class="block text-sm font-medium text-white">Search</label>
@@ -69,7 +80,7 @@
                             class="input-field w-full"
                         >
                             <option value="">All Industries</option>
-                            <option v-for="industry in industries" :key="industry" :value="industry">
+                            <option v-for="industry in uniqueIndustries" :key="industry" :value="industry">
                                 {{ industry }}
                             </option>
                         </select>
@@ -84,7 +95,7 @@
                             class="input-field w-full"
                         >
                             <option value="">All Stages</option>
-                            <option v-for="stage in stages" :key="stage" :value="stage">
+                            <option v-for="stage in uniqueStages" :key="stage" :value="stage">
                                 {{ stage }}
                             </option>
                         </select>
@@ -109,8 +120,8 @@
         </div>
 
         <!-- Card View -->
-        <div v-if="viewMode === 'cards'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div v-for="startup in filteredStartups" :key="startup.id" class="card hover:shadow-lg transition-shadow duration-300">
+        <div v-if="!isLoading && viewMode === 'cards'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div v-for="startup in paginatedStartups" :key="startup.id" class="card hover:shadow-lg transition-shadow duration-300">
                 <div class="flex flex-col h-full">
                     <div class="flex-shrink-0">
                         <div class="h-40 w-full bg-gradient-to-r from-primary-600 to-primary-800 rounded-t-lg flex items-center justify-center">
@@ -161,7 +172,7 @@
         </div>
 
         <!-- Table View -->
-        <div v-else class="card">
+        <div v-else-if="!isLoading" class="card">
             <div class="table-container">
                 <table class="table">
                     <thead>
@@ -210,7 +221,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="startup in filteredStartups" :key="startup.id" class="hover:bg-gray-700 transition-colors duration-150">
+                        <tr v-for="startup in paginatedStartups" :key="startup.id" class="hover:bg-gray-700 transition-colors duration-150">
                             <td>
                                 <div class="flex items-center">
                                     <img :src="startup.logo" :alt="startup.name" class="h-8 w-8 rounded-full">
@@ -253,164 +264,164 @@
         </div>
 
         <!-- Pagination -->
-        <div class="flex items-center justify-between">
+        <div v-if="!isLoading" class="flex items-center justify-between">
             <div class="text-sm text-gray-400">
-                Showing {{ filteredStartups.length }} of {{ startups.length }} startups
+                Showing {{ paginatedStartups.length }} of {{ filteredStartups.length }} startups
             </div>
             <div class="flex space-x-2">
-                <button class="btn-secondary" :disabled="currentPage === 1">
+                <button 
+                    class="btn-secondary" 
+                    :disabled="currentPage === 1"
+                    @click="currentPage--"
+                    :class="{'opacity-50': currentPage === 1}"
+                >
                     Previous
                 </button>
-                <button class="btn-secondary" :disabled="currentPage === totalPages">
+                <button 
+                    class="btn-secondary" 
+                    :disabled="currentPage === totalPages || totalPages === 0"
+                    @click="currentPage++"
+                    :class="{'opacity-50': currentPage === totalPages || totalPages === 0}"
+                >
                     Next
                 </button>
             </div>
+        </div>
+        
+        <!-- No results message -->
+        <div v-if="!isLoading && filteredStartups.length === 0" class="card p-8 text-center">
+            <svg class="h-16 w-16 mx-auto text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p class="mt-4 text-xl text-gray-400">No startups found matching your criteria</p>
+            <button @click="clearFilters" class="mt-4 btn-secondary">Clear filters</button>
         </div>
     </div>
 </template>
 
 <script>
+import { ref, computed, onMounted } from 'vue';
+import axios from 'axios';
+
 export default {
     name: 'StartupList',
-    data() {
-        return {
-            viewMode: 'cards',
-            showMap: false,
-            currentPage: 1,
-            itemsPerPage: 9,
-            filters: {
-                search: '',
-                industry: '',
-                stage: ''
-            },
-            sortBy: 'name',
-            sortDesc: false,
-            industries: ['Technology', 'Healthcare', 'FinTech', 'E-commerce', 'CleanTech', 'AI/ML', 'EdTech', 'Biotech'],
-            stages: ['Seed', 'Series A', 'Series B', 'Series C', 'Growth', 'IPO'],
-            startups: [
-                {
-                    id: 1,
-                    name: 'TechStart Inc.',
-                    logo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-                    location: 'San Francisco, CA',
-                    industry: 'Technology',
-                    stage: 'Series A',
-                    funding: 10,
-                    fundingRound: 'Series A',
-                    founded: '2020',
-                    employees: 45,
-                    growth: 25
-                },
-                {
-                    id: 2,
-                    name: 'HealthTech Solutions',
-                    logo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-                    location: 'Boston, MA',
-                    industry: 'Healthcare',
-                    stage: 'Series B',
-                    funding: 25,
-                    fundingRound: 'Series B',
-                    founded: '2018',
-                    employees: 120,
-                    growth: 15
-                },
-                {
-                    id: 3,
-                    name: 'FinTech Pro',
-                    logo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-                    location: 'New York, NY',
-                    industry: 'FinTech',
-                    stage: 'Seed',
-                    funding: 2,
-                    fundingRound: 'Seed',
-                    founded: '2022',
-                    employees: 12,
-                    growth: 8
-                },
-                {
-                    id: 4,
-                    name: 'EcoClean Energy',
-                    logo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-                    location: 'Austin, TX',
-                    industry: 'CleanTech',
-                    stage: 'Series A',
-                    funding: 8,
-                    fundingRound: 'Series A',
-                    founded: '2021',
-                    employees: 35,
-                    growth: 18
-                },
-                {
-                    id: 5,
-                    name: 'AI Analytics',
-                    logo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-                    location: 'Seattle, WA',
-                    industry: 'AI/ML',
-                    stage: 'Series C',
-                    funding: 50,
-                    fundingRound: 'Series C',
-                    founded: '2017',
-                    employees: 250,
-                    growth: 30
-                },
-                {
-                    id: 6,
-                    name: 'ShopSmart',
-                    logo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-                    location: 'Chicago, IL',
-                    industry: 'E-commerce',
-                    stage: 'Series B',
-                    funding: 15,
-                    fundingRound: 'Series B',
-                    founded: '2019',
-                    employees: 85,
-                    growth: 22
-                }
-            ]
-        }
-    },
-    computed: {
-        filteredStartups() {
-            return this.startups
+    setup() {
+        const viewMode = ref('cards');
+        const showMap = ref(false);
+        const currentPage = ref(1);
+        const itemsPerPage = ref(9);
+        const isLoading = ref(true);
+        const startups = ref([]);
+        const filters = ref({
+            search: '',
+            industry: '',
+            stage: ''
+        });
+        const sortBy = ref('name');
+        const sortDesc = ref(false);
+
+        // Fetch startups list data from API
+        const fetchStartups = async () => {
+            try {
+                isLoading.value = true;
+                const baseUrl = window.location.origin;
+                const response = await axios.get(`${baseUrl}/api/startup-list-data`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    withCredentials: true
+                });
+                
+                startups.value = response.data;
+                isLoading.value = false;
+            } catch (error) {
+                console.error('Error fetching startups:', error);
+                alert('Failed to load startups data');
+                isLoading.value = false;
+            }
+        };
+        
+        // Extract unique industries from the startups list
+        const uniqueIndustries = computed(() => {
+            const industries = new Set(startups.value.map(startup => startup.industry));
+            return Array.from(industries).sort();
+        });
+        
+        // Extract unique stages from the startups list
+        const uniqueStages = computed(() => {
+            const stages = new Set(startups.value.map(startup => startup.stage));
+            return Array.from(stages).sort();
+        });
+
+        // Apply filters and sorting to the startups list
+        const filteredStartups = computed(() => {
+            return startups.value
                 .filter(startup => {
-                    const matchesSearch = startup.name.toLowerCase().includes(this.filters.search.toLowerCase()) ||
-                        startup.location.toLowerCase().includes(this.filters.search.toLowerCase());
-                    const matchesIndustry = !this.filters.industry || startup.industry === this.filters.industry;
-                    const matchesStage = !this.filters.stage || startup.stage === this.filters.stage;
+                    const matchesSearch = !filters.value.search || 
+                        startup.name.toLowerCase().includes(filters.value.search.toLowerCase()) ||
+                        startup.location.toLowerCase().includes(filters.value.search.toLowerCase());
+                    const matchesIndustry = !filters.value.industry || startup.industry === filters.value.industry;
+                    const matchesStage = !filters.value.stage || startup.stage === filters.value.stage;
                     return matchesSearch && matchesIndustry && matchesStage;
                 })
                 .sort((a, b) => {
                     let comparison = 0;
-                    if (a[this.sortBy] > b[this.sortBy]) comparison = 1;
-                    if (a[this.sortBy] < b[this.sortBy]) comparison = -1;
-                    return this.sortDesc ? comparison * -1 : comparison;
+                    if (a[sortBy.value] > b[sortBy.value]) comparison = 1;
+                    if (a[sortBy.value] < b[sortBy.value]) comparison = -1;
+                    return sortDesc.value ? comparison * -1 : comparison;
                 });
-        },
-        totalPages() {
-            return Math.ceil(this.filteredStartups.length / this.itemsPerPage);
-        },
-        paginatedStartups() {
-            const start = (this.currentPage - 1) * this.itemsPerPage;
-            const end = start + this.itemsPerPage;
-            return this.filteredStartups.slice(start, end);
-        }
-    },
-    methods: {
-        toggleViewMode() {
-            this.viewMode = this.viewMode === 'cards' ? 'table' : 'cards';
-        },
-        toggleMapView() {
-            this.showMap = !this.showMap;
-        },
-        sort(column) {
-            if (this.sortBy === column) {
-                this.sortDesc = !this.sortDesc;
+        });
+
+        // Calculate total pages for pagination
+        const totalPages = computed(() => {
+            return Math.max(1, Math.ceil(filteredStartups.value.length / itemsPerPage.value));
+        });
+        
+        // Get current page of startups
+        const paginatedStartups = computed(() => {
+            const start = (currentPage.value - 1) * itemsPerPage.value;
+            const end = start + itemsPerPage.value;
+            return filteredStartups.value.slice(start, end);
+        });
+
+        // Initialize and set up auto-refresh
+        onMounted(() => {
+            fetchStartups();
+            
+            // Refresh data every minute (60000 ms)
+            const refreshInterval = setInterval(() => {
+                fetchStartups();
+            }, 60000);
+            
+            // Clean up interval on component unmount
+            return () => {
+                clearInterval(refreshInterval);
+            };
+        });
+
+        // Toggle between card and table views
+        const toggleViewMode = () => {
+            viewMode.value = viewMode.value === 'cards' ? 'table' : 'cards';
+        };
+        
+        // Toggle map view
+        const toggleMapView = () => {
+            showMap.value = !showMap.value;
+        };
+        
+        // Handle sorting
+        const sort = (column) => {
+            if (sortBy.value === column) {
+                sortDesc.value = !sortDesc.value;
             } else {
-                this.sortBy = column;
-                this.sortDesc = false;
+                sortBy.value = column;
+                sortDesc.value = false;
             }
-        },
-        getStageBadgeClass(stage) {
+        };
+        
+        // Get CSS class for stage badge
+        const getStageBadgeClass = (stage) => {
             const classes = {
                 'Seed': 'badge badge-warning',
                 'Series A': 'badge badge-primary',
@@ -420,19 +431,68 @@ export default {
                 'IPO': 'badge badge-info'
             };
             return classes[stage] || 'badge badge-secondary';
-        },
-        viewStartup(startup) {
+        };
+        
+        // Clear all filters
+        const clearFilters = () => {
+            filters.value = {
+                search: '',
+                industry: '',
+                stage: ''
+            };
+            sortBy.value = 'name';
+            sortDesc.value = false;
+            currentPage.value = 1;
+        };
+        
+        // View startup details
+        const viewStartup = (startup) => {
             // Implement view startup logic
             console.log('View startup:', startup);
-        },
-        editStartup(startup) {
+            
+            // In a real application, you might navigate to a details page
+            // router.push(`/startups/${startup.id}`);
+        };
+        
+        // Edit startup
+        const editStartup = (startup) => {
             // Implement edit startup logic
             console.log('Edit startup:', startup);
-        },
-        addStartup() {
-            // Implement add startup logic
+            
+            // In a real application, you might navigate to an edit page or open a modal
+            // router.push(`/startups/edit/${startup.id}`);
+        };
+        
+        // Add new startup
+        const addStartup = () => {
+            // Navigate to add startup page or open a modal
             console.log('Add new startup');
-        }
+        };
+
+        return {
+            viewMode,
+            showMap,
+            currentPage,
+            itemsPerPage,
+            isLoading,
+            startups,
+            filters,
+            sortBy,
+            sortDesc,
+            uniqueIndustries,
+            uniqueStages,
+            filteredStartups,
+            totalPages,
+            paginatedStartups,
+            toggleViewMode,
+            toggleMapView,
+            sort,
+            getStageBadgeClass,
+            clearFilters,
+            viewStartup,
+            editStartup,
+            addStartup
+        };
     }
-}
-</script> 
+};
+</script>

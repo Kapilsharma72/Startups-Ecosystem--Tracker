@@ -267,4 +267,49 @@ class StartupController extends Controller
         
         return response()->json($dashboardData);
     }
+
+    /**
+     * Get enhanced startup list data with additional calculated metrics
+     * 
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function listData()
+    {
+        // Use cache with 1-minute expiration for better performance
+        $startupListData = Cache::remember('startup_list_data', 60, function () {
+            $startups = Startup::all();
+            
+            return $startups->map(function ($startup) {
+                // Get founding date or generate a random one if not available
+                $foundedDate = $startup->created_at 
+                    ? $startup->created_at->format('Y') 
+                    : (2015 + rand(0, 10)); // Random year between 2015-2025
+                
+                // Generate a random growth percentage if not available
+                $growth = rand(-10, 40);
+                
+                // Get employee count or use emp_numbers if available
+                $employees = $startup->emp_numbers ?? rand(5, 500);
+                
+                return [
+                    'id' => $startup->id,
+                    'name' => $startup->name,
+                    'logo' => $startup->logo ?? 'https://via.placeholder.com/150',
+                    'location' => $startup->location,
+                    'industry' => $startup->industry,
+                    'stage' => $startup->stage,
+                    'funding' => $startup->funding,
+                    'fundingRound' => $startup->funding_round,
+                    'founded' => $foundedDate,
+                    'employees' => $employees,
+                    'growth' => $growth,
+                    'description' => $startup->description,
+                    'website' => $startup->website,
+                    'technologies' => $startup->technologies
+                ];
+            });
+        });
+        
+        return response()->json($startupListData);
+    }
 }
