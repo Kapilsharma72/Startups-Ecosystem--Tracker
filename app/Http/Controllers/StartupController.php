@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Startup;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 
 class StartupController extends Controller
 {
@@ -41,8 +42,19 @@ class StartupController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $startup = Startup::create($request->all());
-        return response()->json($startup, 201);
+        try {
+            $startup = Startup::create($request->all());
+            return response()->json([
+                'message' => 'Startup created successfully',
+                'startup' => $startup
+            ], 201);
+        } catch (\Exception $e) {
+            Log::error('Error creating startup: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Failed to create startup',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -78,8 +90,19 @@ class StartupController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $startup->update($request->all());
-        return response()->json($startup);
+        try {
+            $startup->update($request->all());
+            return response()->json([
+                'message' => 'Startup updated successfully',
+                'startup' => $startup
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error updating startup: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Failed to update startup',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -87,7 +110,15 @@ class StartupController extends Controller
      */
     public function destroy(Startup $startup)
     {
-        $startup->delete();
-        return response()->json(null, 204);
+        try {
+            $startup->delete();
+            return response()->json(['message' => 'Startup deleted successfully'], 200);
+        } catch (\Exception $e) {
+            Log::error('Error deleting startup: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Failed to delete startup',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
-} 
+}

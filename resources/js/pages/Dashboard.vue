@@ -4,7 +4,7 @@
         <div class="flex justify-between items-center">
             <h1 class="text-2xl font-bold text-white">Dashboard</h1>
             <div class="flex space-x-3">
-                <button class="btn-primary flex items-center">
+                <button @click="showStartupModal = true" class="btn-primary flex items-center">
                     <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                     </svg>
@@ -205,6 +205,214 @@
                 </div>
             </div>
         </div>
+
+        <!-- Startup Form Modal -->
+        <div v-if="showStartupModal" class="fixed inset-0 overflow-y-auto z-50">
+            <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                    <div class="absolute inset-0 bg-gray-900 opacity-75"></div>
+                </div>
+                
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                
+                <div class="inline-block align-bottom bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full max-h-[90vh] overflow-y-auto">
+                    <div class="bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-primary-600 sm:mx-0 sm:h-10 sm:w-10">
+                                <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                            </div>
+                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                                <h3 class="text-lg leading-6 font-medium text-white">
+                                    Add New Startup
+                                </h3>
+                                <div class="mt-4">
+                                    <form @submit.prevent="submitStartup" class="space-y-4">
+                                        <!-- Basic Information -->
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label for="name" class="block text-sm font-medium text-gray-300">Name*</label>
+                                                <input type="text" id="name" v-model="startupForm.name" class="mt-1 input-field w-full" required />
+                                            </div>
+                                            <div>
+                                                <label for="website" class="block text-sm font-medium text-gray-300">Website</label>
+                                                <input type="url" id="website" v-model="startupForm.website" class="mt-1 input-field w-full" placeholder="https://..." />
+                                            </div>
+                                        </div>
+
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label for="location" class="block text-sm font-medium text-gray-300">Location*</label>
+                                                <input type="text" id="location" v-model="startupForm.location" class="mt-1 input-field w-full" required />
+                                            </div>
+                                            <div>
+                                                <label for="logo" class="block text-sm font-medium text-gray-300">Logo URL</label>
+                                                <input type="url" id="logo" v-model="startupForm.logo" class="mt-1 input-field w-full" placeholder="https://..." />
+                                            </div>
+                                        </div>
+
+                                        <!-- Industry & Stage -->
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label for="industry" class="block text-sm font-medium text-gray-300">Industry*</label>
+                                                <select id="industry" v-model="startupForm.industry" class="mt-1 input-field w-full" required>
+                                                    <option value="">Select Industry</option>
+                                                    <option v-for="industry in industries" :key="industry" :value="industry">{{ industry }}</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label for="stage" class="block text-sm font-medium text-gray-300">Stage*</label>
+                                                <select id="stage" v-model="startupForm.stage" class="mt-1 input-field w-full" required>
+                                                    <option value="">Select Stage</option>
+                                                    <option v-for="stage in stages" :key="stage" :value="stage">{{ stage }}</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <!-- Funding Information -->
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label for="funding" class="block text-sm font-medium text-gray-300">Funding Amount (in millions)*</label>
+                                                <input type="number" id="funding" v-model="startupForm.funding" step="0.01" min="0" class="mt-1 input-field w-full" required />
+                                            </div>
+                                            <div>
+                                                <label for="funding_round" class="block text-sm font-medium text-gray-300">Funding Round*</label>
+                                                <select id="funding_round" v-model="startupForm.funding_round" class="mt-1 input-field w-full" required>
+                                                    <option value="">Select Round</option>
+                                                    <option v-for="round in fundingRounds" :key="round" :value="round">{{ round }}</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <!-- Description -->
+                                        <div>
+                                            <label for="description" class="block text-sm font-medium text-gray-300">Description</label>
+                                            <textarea id="description" v-model="startupForm.description" rows="3" class="mt-1 input-field w-full"></textarea>
+                                        </div>
+
+                                        <!-- Technologies -->
+                                        <div>
+                                            <label for="technologies" class="block text-sm font-medium text-gray-300">Technologies</label>
+                                            <div class="mt-1 flex flex-wrap gap-2">
+                                                <input 
+                                                    type="text" 
+                                                    v-model="techInput" 
+                                                    @keydown.enter.prevent="addTechnology" 
+                                                    placeholder="Add and press Enter" 
+                                                    class="input-field flex-grow"
+                                                />
+                                            </div>
+                                            <div class="mt-2 flex flex-wrap gap-2">
+                                                <span 
+                                                    v-for="(tech, index) in startupForm.technologies" 
+                                                    :key="index" 
+                                                    class="bg-primary-600 text-white text-xs px-2 py-1 rounded flex items-center"
+                                                >
+                                                    {{ tech }}
+                                                    <button 
+                                                        @click="removeTechnology(index)" 
+                                                        type="button" 
+                                                        class="ml-1 text-white hover:text-white/70"
+                                                    >
+                                                        &times;
+                                                    </button>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Team Members -->
+                                        <div>
+                                            <label for="team_members" class="block text-sm font-medium text-gray-300">Team Members</label>
+                                            <div class="mt-1 flex flex-wrap gap-2">
+                                                <input 
+                                                    type="text" 
+                                                    v-model="teamInput" 
+                                                    @keydown.enter.prevent="addTeamMember" 
+                                                    placeholder="Add and press Enter" 
+                                                    class="input-field flex-grow"
+                                                />
+                                            </div>
+                                            <div class="mt-2 flex flex-wrap gap-2">
+                                                <span 
+                                                    v-for="(member, index) in startupForm.team_members" 
+                                                    :key="index" 
+                                                    class="bg-purple-600 text-white text-xs px-2 py-1 rounded flex items-center"
+                                                >
+                                                    {{ member }}
+                                                    <button 
+                                                        @click="removeTeamMember(index)" 
+                                                        type="button" 
+                                                        class="ml-1 text-white hover:text-white/70"
+                                                    >
+                                                        &times;
+                                                    </button>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Metrics -->
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-300">Metrics</label>
+                                            <div class="space-y-3 mt-2">
+                                                <div v-for="(metric, index) in startupForm.metrics" :key="index" class="flex gap-2">
+                                                    <input
+                                                        type="text"
+                                                        v-model="metric.name"
+                                                        placeholder="Metric name"
+                                                        class="input-field w-1/2"
+                                                    />
+                                                    <input
+                                                        type="text"
+                                                        v-model="metric.value"
+                                                        placeholder="Value"
+                                                        class="input-field w-1/2"
+                                                    />
+                                                    <button
+                                                        @click="removeMetric(index)"
+                                                        type="button"
+                                                        class="bg-red-600 text-white p-2 rounded hover:bg-red-700"
+                                                    >
+                                                        &times;
+                                                    </button>
+                                                </div>
+                                                
+                                                <button
+                                                    @click="addMetric"
+                                                    type="button"
+                                                    class="bg-gray-700 text-white px-3 py-1 rounded flex items-center text-sm"
+                                                >
+                                                    <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                                    </svg>
+                                                    Add Metric
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button 
+                            @click="submitStartup" 
+                            type="button" 
+                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-base font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:ml-3 sm:w-auto sm:text-sm"
+                        >
+                            Save Startup
+                        </button>
+                        <button 
+                            @click="showStartupModal = false" 
+                            type="button" 
+                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-600 shadow-sm px-4 py-2 bg-gray-800 text-base font-medium text-gray-300 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -212,6 +420,7 @@
 import { ref, onMounted } from 'vue';
 import { Chart, registerables } from 'chart.js';
 import { Line, Doughnut } from 'vue-chartjs';
+import axios from 'axios';
 
 Chart.register(...registerables);
 
@@ -224,6 +433,9 @@ export default {
     setup() {
         const fundingChart = ref(null);
         const industryChart = ref(null);
+        const showStartupModal = ref(false);
+        const techInput = ref('');
+        const teamInput = ref('');
 
         // Sample data
         const stats = ref({
@@ -426,6 +638,127 @@ export default {
             }
         };
 
+        const addTechnology = () => {
+            if (techInput.value) {
+                startupForm.technologies.push(techInput.value);
+                techInput.value = '';
+            }
+        };
+
+        const removeTechnology = (index) => {
+            startupForm.technologies.splice(index, 1);
+        };
+
+        const addTeamMember = () => {
+            if (teamInput.value) {
+                startupForm.team_members.push(teamInput.value);
+                teamInput.value = '';
+            }
+        };
+
+        const removeTeamMember = (index) => {
+            startupForm.team_members.splice(index, 1);
+        };
+
+        const addMetric = () => {
+            startupForm.value.metrics.push({ name: '', value: '' });
+        };
+
+        const removeMetric = (index) => {
+            startupForm.value.metrics.splice(index, 1);
+        };
+
+        const submitStartup = async () => {
+            try {
+                // Create a plain JavaScript object from the reactive form data
+                const formData = {
+                    name: startupForm.value.name,
+                    website: startupForm.value.website,
+                    location: startupForm.value.location,
+                    logo: startupForm.value.logo,
+                    industry: startupForm.value.industry,
+                    stage: startupForm.value.stage,
+                    funding: startupForm.value.funding,
+                    funding_round: startupForm.value.funding_round,
+                    description: startupForm.value.description,
+                    technologies: [...(startupForm.value.technologies || [])],
+                    team_members: [...(startupForm.value.team_members || [])],
+                    metrics: JSON.parse(JSON.stringify(startupForm.value.metrics || []))
+                };
+
+                // Include CSRF token in headers
+                const headers = {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                };
+
+                // Get the base URL of the application
+                const baseUrl = window.location.origin;
+                
+                // Make the API request with the correct URL
+                // Use either /api/startups or just /startups depending on your API configuration
+                const response = await axios.post(`${baseUrl}/api/startups`, formData, { 
+                    headers,
+                    withCredentials: true // Add this to include cookies in the request
+                });
+                
+                // Show success notification
+                alert(response.data.message || 'Startup created successfully');
+                
+                // Reset form and close modal
+                startupForm.value = {
+                    name: '',
+                    website: '',
+                    location: '',
+                    logo: '',
+                    industry: '',
+                    stage: '',
+                    funding: null,
+                    funding_round: '',
+                    description: '',
+                    technologies: [],
+                    team_members: [],
+                    metrics: []
+                };
+                showStartupModal.value = false;
+                
+            } catch (error) {
+                console.error('Error submitting startup:', error);
+                let errorMessage = 'Failed to create startup';
+                
+                if (error.response && error.response.data && error.response.data.errors) {
+                    const errors = error.response.data.errors;
+                    errorMessage = Object.values(errors).flat().join(', ');
+                } else if (error.response && error.response.data && error.response.data.message) {
+                    errorMessage = error.response.data.message;
+                }
+                
+                alert('Error: ' + errorMessage);
+            }
+        };
+
+        // Form data for new startup
+        const startupForm = ref({
+            name: '',
+            website: '',
+            location: '',
+            logo: '',
+            industry: '',
+            stage: '',
+            funding: null,
+            funding_round: '',
+            description: '',
+            technologies: [],
+            team_members: [],
+            metrics: []
+        });
+
+        // Sample industries and stages
+        const industries = ref(['AI', 'Healthcare', 'FinTech', 'CleanTech', 'E-commerce', 'Other']);
+        const stages = ref(['Seed', 'Series A', 'Series B', 'Series C', 'IPO']);
+        const fundingRounds = ref(['Seed', 'Angel', 'VC', 'Debt', 'IPO']);
+
         return {
             fundingChart,
             industryChart,
@@ -435,8 +768,22 @@ export default {
             formatNumber,
             formatDate,
             getActivityIconClass,
-            getGrowthBadgeClass
+            getGrowthBadgeClass,
+            showStartupModal,
+            techInput,
+            teamInput,
+            addTechnology,
+            removeTechnology,
+            addTeamMember,
+            removeTeamMember,
+            addMetric,
+            removeMetric,
+            submitStartup,
+            startupForm,
+            industries,
+            stages,
+            fundingRounds
         };
     }
 };
-</script> 
+</script>

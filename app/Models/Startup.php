@@ -27,10 +27,33 @@ class Startup extends Model
 
     protected $casts = [
         'funding' => 'decimal:2',
-        'team_members' => 'array',
-        'technologies' => 'array',
-        'metrics' => 'array'
     ];
+
+    // Mutators and accessors for longtext JSON fields
+    public function setTeamMembersAttribute($value)
+    {
+        $this->attributes['team_members'] = json_encode($value ?: []);
+    }
+    public function getTeamMembersAttribute($value)
+    {
+        return $value ? json_decode($value, true) : [];
+    }
+    public function setTechnologiesAttribute($value)
+    {
+        $this->attributes['technologies'] = json_encode($value ?: []);
+    }
+    public function getTechnologiesAttribute($value)
+    {
+        return $value ? json_decode($value, true) : [];
+    }
+    public function setMetricsAttribute($value)
+    {
+        $this->attributes['metrics'] = json_encode($value ?: []);
+    }
+    public function getMetricsAttribute($value)
+    {
+        return $value ? json_decode($value, true) : [];
+    }
 
     public function investors()
     {
@@ -59,4 +82,4 @@ class Startup extends Model
             default => 'badge-secondary'
         };
     }
-} 
+}
