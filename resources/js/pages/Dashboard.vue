@@ -294,100 +294,18 @@
                                         <!-- Technologies -->
                                         <div>
                                             <label for="technologies" class="block text-sm font-medium text-gray-300">Technologies</label>
-                                            <div class="mt-1 flex flex-wrap gap-2">
-                                                <input 
-                                                    type="text" 
-                                                    v-model="techInput" 
-                                                    @keydown.enter.prevent="addTechnology" 
-                                                    placeholder="Add and press Enter" 
-                                                    class="input-field flex-grow"
-                                                />
-                                            </div>
-                                            <div class="mt-2 flex flex-wrap gap-2">
-                                                <span 
-                                                    v-for="(tech, index) in startupForm.technologies" 
-                                                    :key="index" 
-                                                    class="bg-primary-600 text-white text-xs px-2 py-1 rounded flex items-center"
-                                                >
-                                                    {{ tech }}
-                                                    <button 
-                                                        @click="removeTechnology(index)" 
-                                                        type="button" 
-                                                        class="ml-1 text-white hover:text-white/70"
-                                                    >
-                                                        &times;
-                                                    </button>
-                                                </span>
-                                            </div>
+                                            <input 
+                                                type="text" 
+                                                v-model="startupForm.technologies" 
+                                                placeholder="Comma separated" 
+                                                class="mt-1 input-field w-full"
+                                            />
                                         </div>
-                                        
-                                        <!-- Team Members -->
+
+                                        <!-- Employee Numbers -->
                                         <div>
-                                            <label for="team_members" class="block text-sm font-medium text-gray-300">Team Members</label>
-                                            <div class="mt-1 flex flex-wrap gap-2">
-                                                <input 
-                                                    type="text" 
-                                                    v-model="teamInput" 
-                                                    @keydown.enter.prevent="addTeamMember" 
-                                                    placeholder="Add and press Enter" 
-                                                    class="input-field flex-grow"
-                                                />
-                                            </div>
-                                            <div class="mt-2 flex flex-wrap gap-2">
-                                                <span 
-                                                    v-for="(member, index) in startupForm.team_members" 
-                                                    :key="index" 
-                                                    class="bg-purple-600 text-white text-xs px-2 py-1 rounded flex items-center"
-                                                >
-                                                    {{ member }}
-                                                    <button 
-                                                        @click="removeTeamMember(index)" 
-                                                        type="button" 
-                                                        class="ml-1 text-white hover:text-white/70"
-                                                    >
-                                                        &times;
-                                                    </button>
-                                                </span>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Metrics -->
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-300">Metrics</label>
-                                            <div class="space-y-3 mt-2">
-                                                <div v-for="(metric, index) in startupForm.metrics" :key="index" class="flex gap-2">
-                                                    <input
-                                                        type="text"
-                                                        v-model="metric.name"
-                                                        placeholder="Metric name"
-                                                        class="input-field w-1/2"
-                                                    />
-                                                    <input
-                                                        type="text"
-                                                        v-model="metric.value"
-                                                        placeholder="Value"
-                                                        class="input-field w-1/2"
-                                                    />
-                                                    <button
-                                                        @click="removeMetric(index)"
-                                                        type="button"
-                                                        class="bg-red-600 text-white p-2 rounded hover:bg-red-700"
-                                                    >
-                                                        &times;
-                                                    </button>
-                                                </div>
-                                                
-                                                <button
-                                                    @click="addMetric"
-                                                    type="button"
-                                                    class="bg-gray-700 text-white px-3 py-1 rounded flex items-center text-sm"
-                                                >
-                                                    <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                                    </svg>
-                                                    Add Metric
-                                                </button>
-                                            </div>
+                                            <label for="emp_numbers" class="block text-sm font-medium text-gray-300">Employee Numbers</label>
+                                            <input type="number" id="emp_numbers" v-model="startupForm.emp_numbers" class="mt-1 input-field w-full" />
                                         </div>
                                     </form>
                                 </div>
@@ -435,7 +353,6 @@ export default {
         const industryChart = ref(null);
         const showStartupModal = ref(false);
         const techInput = ref('');
-        const teamInput = ref('');
 
         // Sample data
         const stats = ref({
@@ -638,39 +555,30 @@ export default {
             }
         };
 
-        const addTechnology = () => {
-            if (techInput.value) {
-                startupForm.technologies.push(techInput.value);
-                techInput.value = '';
-            }
-        };
+        // Form data for new startup
+        const startupForm = ref({
+            name: '',
+            website: '',
+            location: '',
+            logo: '',
+            industry: '',
+            stage: '',
+            funding: null,
+            funding_round: '',
+            description: '',
+            emp_numbers: null,
+            technologies: ''  // Changed from array to string
+        });
 
-        const removeTechnology = (index) => {
-            startupForm.technologies.splice(index, 1);
-        };
+        // Sample industries and stages
+        const industries = ref(['AI', 'Healthcare', 'FinTech', 'CleanTech', 'E-commerce', 'Other']);
+        const stages = ref(['Seed', 'Series A', 'Series B', 'Series C', 'IPO']);
+        const fundingRounds = ref(['Seed', 'Angel', 'VC', 'Debt', 'IPO']);
 
-        const addTeamMember = () => {
-            if (teamInput.value) {
-                startupForm.team_members.push(teamInput.value);
-                teamInput.value = '';
-            }
-        };
-
-        const removeTeamMember = (index) => {
-            startupForm.team_members.splice(index, 1);
-        };
-
-        const addMetric = () => {
-            startupForm.value.metrics.push({ name: '', value: '' });
-        };
-
-        const removeMetric = (index) => {
-            startupForm.value.metrics.splice(index, 1);
-        };
-
+        // Fix the submitStartup function to properly handle the new schema
         const submitStartup = async () => {
             try {
-                // Create a plain JavaScript object from the reactive form data
+                // Prepare the form data according to our updated schema
                 const formData = {
                     name: startupForm.value.name,
                     website: startupForm.value.website,
@@ -681,9 +589,12 @@ export default {
                     funding: startupForm.value.funding,
                     funding_round: startupForm.value.funding_round,
                     description: startupForm.value.description,
-                    technologies: [...(startupForm.value.technologies || [])],
-                    team_members: [...(startupForm.value.team_members || [])],
-                    metrics: JSON.parse(JSON.stringify(startupForm.value.metrics || []))
+                    // Send employee number as integer
+                    emp_numbers: Number(startupForm.value.emp_numbers) || null,
+                    // Convert technologies from array to comma-separated string
+                    technologies: Array.isArray(startupForm.value.technologies) 
+                        ? startupForm.value.technologies.join(', ') 
+                        : startupForm.value.technologies || ''
                 };
 
                 // Include CSRF token in headers
@@ -717,9 +628,8 @@ export default {
                     funding: null,
                     funding_round: '',
                     description: '',
-                    technologies: [],
-                    team_members: [],
-                    metrics: []
+                    emp_numbers: null,
+                    technologies: ''
                 };
                 showStartupModal.value = false;
                 
@@ -738,27 +648,6 @@ export default {
             }
         };
 
-        // Form data for new startup
-        const startupForm = ref({
-            name: '',
-            website: '',
-            location: '',
-            logo: '',
-            industry: '',
-            stage: '',
-            funding: null,
-            funding_round: '',
-            description: '',
-            technologies: [],
-            team_members: [],
-            metrics: []
-        });
-
-        // Sample industries and stages
-        const industries = ref(['AI', 'Healthcare', 'FinTech', 'CleanTech', 'E-commerce', 'Other']);
-        const stages = ref(['Seed', 'Series A', 'Series B', 'Series C', 'IPO']);
-        const fundingRounds = ref(['Seed', 'Angel', 'VC', 'Debt', 'IPO']);
-
         return {
             fundingChart,
             industryChart,
@@ -770,14 +659,6 @@ export default {
             getActivityIconClass,
             getGrowthBadgeClass,
             showStartupModal,
-            techInput,
-            teamInput,
-            addTechnology,
-            removeTechnology,
-            addTeamMember,
-            removeTeamMember,
-            addMetric,
-            removeMetric,
             submitStartup,
             startupForm,
             industries,

@@ -33,9 +33,8 @@ class StartupController extends Controller
             'funding_round' => 'required|string|max:255',
             'description' => 'nullable|string',
             'website' => 'nullable|string|max:255',
-            'team_members' => 'nullable|array',
-            'technologies' => 'nullable|array',
-            'metrics' => 'nullable|array',
+            'emp_numbers' => 'nullable|integer', // Changed from team_members
+            'technologies' => 'nullable|string', // Changed from array to string
         ]);
 
         if ($validator->fails()) {
@@ -81,9 +80,8 @@ class StartupController extends Controller
             'funding_round' => 'sometimes|required|string|max:255',
             'description' => 'nullable|string',
             'website' => 'nullable|string|max:255',
-            'team_members' => 'nullable|array',
-            'technologies' => 'nullable|array',
-            'metrics' => 'nullable|array',
+            'emp_numbers' => 'nullable|integer', // Changed from team_members
+            'technologies' => 'nullable|string', // Changed from array to string
         ]);
 
         if ($validator->fails()) {

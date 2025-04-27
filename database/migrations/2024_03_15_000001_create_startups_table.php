@@ -20,7 +20,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->string('website')->nullable();
             $table->json('team_members')->nullable();
-            $table->json('technologies')->nullable();
+            $table->text('technologies')->nullable();
             $table->json('metrics')->nullable();
             $table->timestamps();
             $table->softDeletes();
@@ -31,4 +31,4 @@ return new class extends Migration
     {
         Schema::dropIfExists('startups');
     }
-}; 
+};

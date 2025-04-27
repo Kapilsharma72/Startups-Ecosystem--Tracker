@@ -20,41 +20,38 @@ class Startup extends Model
         'funding_round',
         'description',
         'website',
-        'team_members',
-        'technologies',
-        'metrics'
+        'emp_numbers',
+        'technologies'
     ];
 
     protected $casts = [
         'funding' => 'decimal:2',
+        'emp_numbers' => 'integer',
     ];
 
-    // Mutators and accessors for longtext JSON fields
-    public function setTeamMembersAttribute($value)
-    {
-        $this->attributes['team_members'] = json_encode($value ?: []);
-    }
-    public function getTeamMembersAttribute($value)
-    {
-        return $value ? json_decode($value, true) : [];
-    }
+    // Handle technologies as a comma-separated string
     public function setTechnologiesAttribute($value)
     {
-        $this->attributes['technologies'] = json_encode($value ?: []);
-    }
-    public function getTechnologiesAttribute($value)
-    {
-        return $value ? json_decode($value, true) : [];
-    }
-    public function setMetricsAttribute($value)
-    {
-        $this->attributes['metrics'] = json_encode($value ?: []);
-    }
-    public function getMetricsAttribute($value)
-    {
-        return $value ? json_decode($value, true) : [];
+        // If value is an array, convert to comma-separated string
+        if (is_array($value)) {
+            $this->attributes['technologies'] = implode(', ', $value);
+        } else {
+            $this->attributes['technologies'] = $value;
+        }
     }
 
+    public function getTechnologiesAttribute($value)
+    {
+        // Return technologies as an array for backward compatibility in the UI
+        if ($value && !is_array($value) && strpos($value, '[') !== 0) {
+            // If it's a comma-separated string, explode it
+            return array_map('trim', explode(',', $value));
+        }
+        // If it's already JSON, handle it accordingly
+        return $value ? (is_array($value) ? $value : json_decode($value, true)) : [];
+    }
+
+    // Relationships
     public function investors()
     {
         return $this->belongsToMany(Investor::class, 'startup_investor')
