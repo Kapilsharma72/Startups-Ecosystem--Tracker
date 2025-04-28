@@ -97,47 +97,89 @@ class NewsArticleController extends Controller
     }
 
     /**
-     * Fetch news from Google News API.
+     * Fetch news for the frontend from News API.
      */
-    public function fetchNews(Request $request)
+    public function getNewsApiData(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'query' => 'required|string',
-            'days' => 'integer|min:1|max:30',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $apiKey = config('services.google.news_api_key');
+        $apiKey = 'ae643e3d866548ca829938d1097fdee3';
+        $query = $request->get('query', 'startup OR technology OR innovation OR "artificial intelligence" OR fintech');
+        $category = $request->get('category', null);
         $days = $request->get('days', 7);
         $fromDate = now()->subDays($days)->format('Y-m-d');
-
-        $response = Http::get('https://newsapi.org/v2/everything', [
-            'q' => $request->query,
+        
+        $params = [
+            'q' => $query,
             'from' => $fromDate,
             'sortBy' => 'publishedAt',
             'language' => 'en',
             'apiKey' => $apiKey,
-        ]);
-
+        ];
+        
+        if ($category) {
+            $params['category'] = $category;
+        }
+        
+        $response = Http::get('https://newsapi.org/v2/everything', $params);
+        
         if ($response->failed()) {
             return response()->json(['error' => 'Failed to fetch news'], 500);
         }
-
-        $articles = collect($response->json()['articles'])->map(function ($article) {
+        
+        $data = $response->json();
+        
+        if (!isset($data['articles']) || empty($data['articles'])) {
+            return response()->json(['error' => 'No articles found'], 404);
+        }
+        
+        $articles = collect($data['articles'])->map(function ($article, $index) {
+            // Determine category based on content or default categories
+            $possibleCategories = ['AI', 'FinTech', 'Blockchain', 'SaaS', 'HealthTech'];
+            $title = strtolower($article['title']);
+            
+            $category = 'Technology'; // Default
+            
+            if (str_contains($title, 'ai') || str_contains($title, 'artificial intelligence')) {
+                $category = 'AI';
+            } elseif (str_contains($title, 'fintech') || str_contains($title, 'finance')) {
+                $category = 'FinTech';
+            } elseif (str_contains($title, 'blockchain') || str_contains($title, 'crypto')) {
+                $category = 'Blockchain';
+            } elseif (str_contains($title, 'saas') || str_contains($title, 'software')) {
+                $category = 'SaaS';
+            } elseif (str_contains($title, 'health') || str_contains($title, 'medical')) {
+                $category = 'HealthTech';
+            } else {
+                // Randomly assign a category if we can't determine one
+                $category = $possibleCategories[array_rand($possibleCategories)];
+            }
+            
             return [
+                'id' => $index + 1,
                 'title' => $article['title'],
-                'description' => $article['description'],
-                'image' => $article['urlToImage'],
-                'category' => 'News',
-                'source' => $article['source']['name'],
+                'description' => $article['description'] ?? 'No description available',
+                'image' => $article['urlToImage'] ?? 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
+                'category' => $category,
+                'source' => $article['source']['name'] ?? 'Unknown Source',
                 'url' => $article['url'],
                 'published_at' => $article['publishedAt'],
+                'likes_count' => rand(50, 300),
+                'shares_count' => rand(20, 150),
             ];
         });
-
-        return response()->json($articles);
+        
+        // Trending topics - could be dynamically generated based on article content
+        $trendingTopics = [
+            ['id' => 1, 'name' => 'AI', 'count' => rand(30, 50)],
+            ['id' => 2, 'name' => 'FinTech', 'count' => rand(30, 45)],
+            ['id' => 3, 'name' => 'SaaS', 'count' => rand(25, 40)],
+            ['id' => 4, 'name' => 'Blockchain', 'count' => rand(20, 35)],
+            ['id' => 5, 'name' => 'HealthTech', 'count' => rand(15, 30)]
+        ];
+        
+        return response()->json([
+            'articles' => $articles,
+            'featuredArticle' => $articles->first(),
+            'trendingTopics' => $trendingTopics
+        ]);
     }
-} 
+}

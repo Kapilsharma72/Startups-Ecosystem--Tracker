@@ -46,3 +46,6 @@ Route::get('/news-articles/{newsArticle}', [NewsArticleController::class, 'show'
 Route::post('/news-articles', [NewsArticleController::class, 'store']);
 Route::put('/news-articles/{newsArticle}', [NewsArticleController::class, 'update']);
 Route::delete('/news-articles/{newsArticle}', [NewsArticleController::class, 'destroy']);
+
+// External News API data
+Route::get('/external-news', [NewsArticleController::class, 'getNewsApiData']);

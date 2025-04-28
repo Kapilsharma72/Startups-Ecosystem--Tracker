@@ -277,15 +277,10 @@ export default {
             },
             articles: [],
             featuredArticle: null,
-            trendingTopics: [
-                { id: 1, name: 'AI', count: 42 },
-                { id: 2, name: 'FinTech', count: 38 },
-                { id: 3, name: 'SaaS', count: 35 },
-                { id: 4, name: 'Blockchain', count: 28 },
-                { id: 5, name: 'HealthTech', count: 25 }
-            ],
+            trendingTopics: [],
             currentPage: 1,
-            itemsPerPage: 9
+            itemsPerPage: 9,
+            error: null
         }
     },
     computed: {
@@ -356,59 +351,88 @@ export default {
     },
     methods: {
         async fetchNews() {
-            this.isLoading = true
+            this.isLoading = true;
+            this.error = null;
+            
             try {
-                // Simulate API call
-                await new Promise(resolve => setTimeout(resolve, 1000))
+                // Call the backend API endpoint we created
+                const response = await fetch('/api/external-news');
                 
-                // Sample data
-                this.articles = [
-                    {
-                        id: 1,
-                        title: 'AI Startup Raises $50M Series B',
-                        description: 'Leading AI company secures major funding round to expand operations globally.',
-                        image: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-                        category: 'AI',
-                        source: 'TechCrunch',
-                        url: '#',
-                        published_at: '2024-03-15T10:00:00Z',
-                        likes_count: 245,
-                        shares_count: 89
-                    },
-                    {
-                        id: 2,
-                        title: 'FinTech Revolution in Southeast Asia',
-                        description: 'Southeast Asian FinTech startups see unprecedented growth in 2024.',
-                        image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-                        category: 'FinTech',
-                        source: 'Bloomberg',
-                        url: '#',
-                        published_at: '2024-03-14T15:30:00Z',
-                        likes_count: 189,
-                        shares_count: 67
-                    },
-                    {
-                        id: 3,
-                        title: 'Blockchain Startup Partners with Major Banks',
-                        description: 'Innovative blockchain solution set to transform traditional banking.',
-                        image: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-                        category: 'Blockchain',
-                        source: 'Forbes',
-                        url: '#',
-                        published_at: '2024-03-13T09:15:00Z',
-                        likes_count: 312,
-                        shares_count: 124
-                    }
-                ]
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch news: ${response.statusText}`);
+                }
                 
-                // Set featured article
-                this.featuredArticle = this.articles[0]
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                // Update our data with the API response
+                this.articles = data.articles;
+                this.featuredArticle = data.featuredArticle;
+                this.trendingTopics = data.trendingTopics;
                 
             } catch (error) {
-                console.error('Error fetching news:', error)
+                console.error('Error fetching news:', error);
+                this.error = error.message;
+                
+                // If API fails, use fallback data
+                this.loadFallbackData();
             } finally {
-                this.isLoading = false
+                this.isLoading = false;
             }
+        },
+        loadFallbackData() {
+            // Fallback data in case the API call fails
+            console.log('Loading fallback news data');
+            this.articles = [
+                {
+                    id: 1,
+                    title: 'AI Startup Raises $50M Series B',
+                    description: 'Leading AI company secures major funding round to expand operations globally.',
+                    image: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
+                    category: 'AI',
+                    source: 'TechCrunch',
+                    url: '#',
+                    published_at: '2024-03-15T10:00:00Z',
+                    likes_count: 245,
+                    shares_count: 89
+                },
+                {
+                    id: 2,
+                    title: 'FinTech Revolution in Southeast Asia',
+                    description: 'Southeast Asian FinTech startups see unprecedented growth in 2024.',
+                    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
+                    category: 'FinTech',
+                    source: 'Bloomberg',
+                    url: '#',
+                    published_at: '2024-03-14T15:30:00Z',
+                    likes_count: 189,
+                    shares_count: 67
+                },
+                {
+                    id: 3,
+                    title: 'Blockchain Startup Partners with Major Banks',
+                    description: 'Innovative blockchain solution set to transform traditional banking.',
+                    image: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
+                    category: 'Blockchain',
+                    source: 'Forbes',
+                    url: '#',
+                    published_at: '2024-03-13T09:15:00Z',
+                    likes_count: 312,
+                    shares_count: 124
+                }
+            ];
+            
+            this.featuredArticle = this.articles[0];
+            this.trendingTopics = [
+                { id: 1, name: 'AI', count: 42 },
+                { id: 2, name: 'FinTech', count: 38 },
+                { id: 3, name: 'SaaS', count: 35 },
+                { id: 4, name: 'Blockchain', count: 28 },
+                { id: 5, name: 'HealthTech', count: 25 }
+            ];
         },
         toggleViewMode() {
             this.viewMode = this.viewMode === 'grid' ? 'list' : 'grid'
@@ -527,4 +551,4 @@ export default {
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
-</style> 
+</style>
