@@ -4,12 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Startup;
 use App\Models\Investor;
+use App\Exports\StartupsExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
+use Maatwebsite\Excel\Facades\Excel;
 
 class StartupController extends Controller
 {
@@ -311,5 +313,23 @@ class StartupController extends Controller
         });
         
         return response()->json($startupListData);
+    }
+
+    /**
+     * Export startups data to Excel
+     *
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
+     */
+    public function export()
+    {
+        try {
+            return Excel::download(new StartupsExport, 'startups-'.date('Y-m-d').'.xlsx');
+        } catch (\Exception $e) {
+            Log::error('Error exporting startups: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Failed to export startups',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

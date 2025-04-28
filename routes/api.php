@@ -28,6 +28,7 @@ Route::post('/startups', [StartupController::class, 'store']);
 Route::put('/startups/{startup}', [StartupController::class, 'update']);
 Route::delete('/startups/{startup}', [StartupController::class, 'destroy']);
 Route::get('/startup-list-data', [StartupController::class, 'listData']);
+Route::get('/export-startups', [StartupController::class, 'export']); // New route for exporting startups
 
 // Dashboard data
 Route::get('/dashboard-data', [StartupController::class, 'dashboardData']);

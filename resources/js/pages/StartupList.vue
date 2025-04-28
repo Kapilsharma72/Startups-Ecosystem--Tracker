@@ -19,6 +19,12 @@
                     </svg>
                     {{ showMap ? 'Hide Map' : 'Show Map' }}
                 </button>
+                <button @click="exportStartups" class="btn-secondary flex items-center">
+                    <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Export to Excel
+                </button>
                 <button @click="addStartup" class="btn-primary flex items-center">
                     <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -690,6 +696,19 @@ export default {
             window.location.href = '/dashboard';
         };
 
+        // Export startups to Excel
+        const exportStartups = () => {
+            // Get the base URL of the application
+            const baseUrl = window.location.origin;
+            
+            // Create a loading message
+            const loadingMsg = 'Exporting startups data...';
+            alert(loadingMsg);
+            
+            // Navigate to the export endpoint - this will trigger the browser to download the file
+            window.location.href = `${baseUrl}/api/export-startups`;
+        };
+
         return {
             viewMode,
             showMap,
@@ -715,7 +734,8 @@ export default {
             addStartup,
             showEditModal,
             editForm,
-            updateStartup
+            updateStartup,
+            exportStartups // Add the new method to the returned object
         };
     }
 };
