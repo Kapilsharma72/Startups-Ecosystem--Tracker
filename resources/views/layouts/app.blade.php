@@ -30,25 +30,29 @@
                             </a>
                         </div>
                         <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
-                            <a href="/" class="border-primary-500 text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            <a href="/" 
+                                class="{{ request()->is('/') || request()->is('dashboard') ? 'border-primary-500 text-white' : 'border-transparent text-gray-300 hover:border-gray-300 hover:text-white' }} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                                 <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
                                 </svg>
                                 Dashboard
                             </a>
-                            <a href="/startups" class="border-transparent text-gray-300 hover:border-gray-300 hover:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            <a href="/startups" 
+                                class="{{ request()->is('startups*') ? 'border-primary-500 text-white' : 'border-transparent text-gray-300 hover:border-gray-300 hover:text-white' }} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                                 <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                                 </svg>
                                 Startups
                             </a>
-                            <a href="/investors" class="border-transparent text-gray-300 hover:border-gray-300 hover:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            <a href="/investors" 
+                                class="{{ request()->is('investors*') ? 'border-primary-500 text-white' : 'border-transparent text-gray-300 hover:border-gray-300 hover:text-white' }} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                                 <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                                 </svg>
                                 Investors
                             </a>
-                            <a href="/news" class="border-transparent text-gray-300 hover:border-gray-300 hover:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            <a href="/news" 
+                                class="{{ request()->is('news*') ? 'border-primary-500 text-white' : 'border-transparent text-gray-300 hover:border-gray-300 hover:text-white' }} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                                 <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2 2 0 00-.586-1.414l-2-2A2 2 0 0015 5h-2a2 2 0 00-1.414.586l-2 2A2 2 0 009 9.5V17a2 2 0 002 2h10z"></path>
                                 </svg>
@@ -82,23 +86,49 @@
                         </button>
 
                         <!-- Profile dropdown -->
-                        <div class="ml-3 relative">
+                        <div class="ml-3 relative" x-data="{ open: false }">
                             <div>
-                                <button type="button" class="max-w-xs bg-gray-800 rounded-full flex items-center text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white" id="user-menu-button" aria-expanded="false" aria-haspopup="true">
+                                <button type="button" 
+                                  @click="open = !open"
+                                  @click.outside="open = false"
+                                  class="max-w-xs bg-gray-800 rounded-full flex items-center text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white" 
+                                  id="user-menu-button" 
+                                  aria-expanded="false" 
+                                  aria-haspopup="true">
                                     <span class="sr-only">Open user menu</span>
                                     <img class="h-8 w-8 rounded-full" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="">
                                 </button>
                             </div>
                             
-                            <!-- Logout Button -->
-                            @auth
-                            <form method="POST" action="{{ route('logout') }}" class="inline-block ml-3">
-                                @csrf
-                                <button type="submit" class="px-3 py-1 text-xs rounded-full bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-red-500">
-                                    Logout
-                                </button>
-                            </form>
-                            @endauth
+                            <!-- Dropdown menu -->
+                            <div 
+                                x-show="open" 
+                                x-transition:enter="transition ease-out duration-100" 
+                                x-transition:enter-start="transform opacity-0 scale-95" 
+                                x-transition:enter-end="transform opacity-100 scale-100" 
+                                x-transition:leave="transition ease-in duration-75" 
+                                x-transition:leave-start="transform opacity-100 scale-100" 
+                                x-transition:leave-end="transform opacity-0 scale-95" 
+                                class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-gray-700 ring-1 ring-black ring-opacity-5 focus:outline-none" 
+                                role="menu" 
+                                aria-orientation="vertical" 
+                                aria-labelledby="user-menu-button" 
+                                tabindex="-1"
+                                style="display: none;">
+                                <!-- Profile link -->
+                                <a href="#" class="block px-4 py-2 text-sm text-white hover:bg-gray-600" role="menuitem" tabindex="-1">Your Profile</a>
+                                <!-- Settings link -->
+                                <a href="#" class="block px-4 py-2 text-sm text-white hover:bg-gray-600" role="menuitem" tabindex="-1">Settings</a>
+                                <!-- Logout button -->
+                                @auth
+                                <form method="POST" action="{{ route('logout') }}" class="block">
+                                    @csrf
+                                    <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-white hover:bg-gray-600" role="menuitem" tabindex="-1">
+                                        Sign out
+                                    </button>
+                                </form>
+                                @endauth
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -206,5 +236,8 @@
         window.isLoggedIn = false;
     </script>
     @endauth
+    
+    <!-- Alpine.js - Adding for the dropdown functionality -->
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </body>
 </html>
