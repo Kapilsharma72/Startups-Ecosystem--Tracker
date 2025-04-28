@@ -38,6 +38,7 @@ Route::get('/investors/{investor}', [InvestorController::class, 'show']);
 Route::post('/investors', [InvestorController::class, 'store']);
 Route::put('/investors/{investor}', [InvestorController::class, 'update']);
 Route::delete('/investors/{investor}', [InvestorController::class, 'destroy']);
+Route::get('/investor-list-data', [InvestorController::class, 'listData']);
 
 // News Articles
 Route::get('/news-articles', [NewsArticleController::class, 'index']);

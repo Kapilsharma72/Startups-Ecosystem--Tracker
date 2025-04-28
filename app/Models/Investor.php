@@ -18,7 +18,9 @@ class Investor extends Model
         'focus_areas',
         'portfolio_size',
         'total_investment',
+        'avg_check',
         'description',
+        'founded',
         'website',
         'team_members',
         'investment_criteria',
@@ -26,12 +28,87 @@ class Investor extends Model
     ];
 
     protected $casts = [
-        'focus_areas' => 'array',
         'total_investment' => 'decimal:2',
-        'team_members' => 'array',
-        'investment_criteria' => 'array',
-        'portfolio_companies' => 'array'
+        'avg_check' => 'decimal:2',
+        'portfolio_size' => 'integer',
+        'founded' => 'integer'
     ];
+
+    // Handle focus_areas as a comma-separated string
+    public function setFocusAreasAttribute($value)
+    {
+        // If value is an array, convert to comma-separated string
+        if (is_array($value)) {
+            $this->attributes['focus_areas'] = implode(', ', $value);
+        } else {
+            $this->attributes['focus_areas'] = $value;
+        }
+    }
+
+    public function getFocusAreasAttribute($value)
+    {
+        // Return focus areas as an array for backward compatibility in the UI
+        if ($value && !is_array($value) && strpos($value, '[') !== 0) {
+            // If it's a comma-separated string, explode it
+            return array_map('trim', explode(',', $value));
+        }
+        // If it's already JSON, handle it accordingly
+        return $value ? (is_array($value) ? $value : json_decode($value, true)) : [];
+    }
+
+    // Handle team_members as a comma-separated string
+    public function setTeamMembersAttribute($value)
+    {
+        if (is_array($value)) {
+            $this->attributes['team_members'] = implode(', ', $value);
+        } else {
+            $this->attributes['team_members'] = $value;
+        }
+    }
+
+    public function getTeamMembersAttribute($value)
+    {
+        if ($value && !is_array($value) && strpos($value, '[') !== 0) {
+            return array_map('trim', explode(',', $value));
+        }
+        return $value ? (is_array($value) ? $value : json_decode($value, true)) : [];
+    }
+
+    // Handle investment_criteria as a comma-separated string
+    public function setInvestmentCriteriaAttribute($value)
+    {
+        if (is_array($value)) {
+            $this->attributes['investment_criteria'] = implode(', ', $value);
+        } else {
+            $this->attributes['investment_criteria'] = $value;
+        }
+    }
+
+    public function getInvestmentCriteriaAttribute($value)
+    {
+        if ($value && !is_array($value) && strpos($value, '[') !== 0) {
+            return array_map('trim', explode(',', $value));
+        }
+        return $value ? (is_array($value) ? $value : json_decode($value, true)) : [];
+    }
+
+    // Handle portfolio_companies as a comma-separated string
+    public function setPortfolioCompaniesAttribute($value)
+    {
+        if (is_array($value)) {
+            $this->attributes['portfolio_companies'] = implode(', ', $value);
+        } else {
+            $this->attributes['portfolio_companies'] = $value;
+        }
+    }
+
+    public function getPortfolioCompaniesAttribute($value)
+    {
+        if ($value && !is_array($value) && strpos($value, '[') !== 0) {
+            return array_map('trim', explode(',', $value));
+        }
+        return $value ? (is_array($value) ? $value : json_decode($value, true)) : [];
+    }
 
     public function startups()
     {
@@ -62,4 +139,4 @@ class Investor extends Model
             default => 'badge-secondary'
         };
     }
-} 
+}
